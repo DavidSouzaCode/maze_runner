@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stack>
 #include <cstdlib> 
+#include <thread>
+#include <chrono>
+
 
 // Matriz de char representando o labirinto
 char** maze;
@@ -25,13 +28,14 @@ pos_t load_maze(const char* file_name) {
 	FILE* file = fopen(file_name, "r");
     
 	if (!file) {
-		printf("Erro ao abrir o arquivo.\n");
+		printf("Não foi possível abrir o arquivo.\n");
 		exit(1);
 	}
     
 	fscanf(file, "%d %d", &num_rows, &num_cols);
-	printf("Arquivo aberto, %d linhas e %d colunas.\n", &num_rows, &num_cols );
+	//printf("Arquivo aberto, %d linhas e %d colunas.\n", &num_rows, &num_cols );
 
+ 
 	maze = new char*[num_rows];
 	for (int i = 0; i < num_rows; ++i) {
 		maze[i] = new char[num_cols];
@@ -70,21 +74,24 @@ bool walk(pos_t pos) {
 	// Marcar a posição atual como visitada
 	maze[pos.i][pos.j] = '.';
 
+	std::chrono::milliseconds duracao(50);
+    std::this_thread::sleep_for(duracao);
+
 	// Limpar a tela e imprimir o labirinto
-	system("cls"); // Para sistemas Windows
+	system("clear"); // Para sistemas Windows
 	print_maze();
 
 	// Verificar as próximas posições possíveis
-	if (pos.i > 0 && maze[pos.i - 1][pos.j] != '.' && maze[pos.i - 1][pos.j] != 'x') {
+	if (pos.i > 0 && maze[pos.i - 1][pos.j] != '.' && maze[pos.i - 1][pos.j] != '#') {
 		valid_positions.push({pos.i - 1, pos.j});
 	}
-	if (pos.i < num_rows - 1 && maze[pos.i + 1][pos.j] != '.' && maze[pos.i + 1][pos.j] != 'x') {
+	if (pos.i < num_rows - 1 && maze[pos.i + 1][pos.j] != '.' && maze[pos.i + 1][pos.j] != '#') {
 		valid_positions.push({pos.i + 1, pos.j});
 	}
-	if (pos.j > 0 && maze[pos.i][pos.j - 1] != '.' && maze[pos.i][pos.j - 1] != 'x') {
+	if (pos.j > 0 && maze[pos.i][pos.j - 1] != '.' && maze[pos.i][pos.j - 1] != '#') {
 		valid_positions.push({pos.i, pos.j - 1});
 	}
-	if (pos.j < num_cols - 1 && maze[pos.i][pos.j + 1] != '.' && maze[pos.i][pos.j + 1] != 'x') {
+	if (pos.j < num_cols - 1 && maze[pos.i][pos.j + 1] != '.' && maze[pos.i][pos.j + 1] != '#') {
 		valid_positions.push({pos.i, pos.j + 1});
 	}
 
@@ -100,9 +107,8 @@ bool walk(pos_t pos) {
 
 int main(int argc, char* argv[]) {
 
-
 	// Carregar o labirinto com o nome do arquivo recebido como argumento
-	pos_t initial_pos = load_maze("../data/maze.txt");
+	pos_t initial_pos = load_maze("../data/maze5.txt");
 
 	// Chamar a função de navegação
 	bool exit_found = walk(initial_pos);
@@ -121,4 +127,6 @@ int main(int argc, char* argv[]) {
 	delete[] maze;
 
 	return 0;
+
+
 }
