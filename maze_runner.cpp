@@ -22,8 +22,8 @@ std::mutex mtx; // Mutex para sincronizar a impressão do labirinto
 // Função para imprimir o labirinto em uma thread separada
 void print_maze_thread() {
     while (true) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Imprimir a cada meio segundo
-        mtx.lock(); // Bloquear o mutex antes de imprimir
+        std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Imprimir a cada meio segundo
+
         system("clear"); // Limpar a tela (Windows: "cls")
         for (int i = 0; i < num_rows; ++i) {
             for (int j = 0; j < num_cols; ++j) {
@@ -31,7 +31,6 @@ void print_maze_thread() {
             }
             printf("\n");
         }
-        mtx.unlock(); // Desbloquear o mutex após a impressão
     }
 }
 
@@ -85,7 +84,7 @@ bool walk(pos_t pos) {
     }
     mtx.unlock(); // Desbloquear o mutex após a impressão
 */
-    std::vector<std::thread> threads; // Para armazenar threads adicionais
+    //std::vector<std::thread> threads; // Para armazenar threads adicionais
 
     if (pos.i > 0 && maze[pos.i - 1][pos.j] != '.' && maze[pos.i - 1][pos.j] != '#') {
         valid_positions.push({pos.i - 1, pos.j});
@@ -114,20 +113,29 @@ bool walk(pos_t pos) {
 		valid_positions.pop();
 
         if(!valid_positions.empty()){
-            pos_t new_position = valid_positions.top();
+            pos_t new_position2 = valid_positions.top();
             valid_positions.pop();
-            std::thread t(walk, pos_t{new_position}); // Criar uma thread para explorar
-            t.detach(); // Desanexar a thread
+            std::thread t2(walk, pos_t{new_position2}); // Criar uma thread para explorar
+            t2.detach(); // Desanexar a thread
+
+            if(!valid_positions.empty()){
+                pos_t new_position3 = valid_positions.top();
+                valid_positions.pop();
+                std::thread t3(walk, pos_t{new_position3}); // Criar uma thread para explorar
+                t3.detach(); // Desanexar a thread    
+            }       
         }
 
 		return walk(next_position);
 	}
 
+
     return false; // Saída não encontrada
 }
 
 int main(int argc, char* argv[]) {
-    pos_t initial_pos = load_maze("../data/maze6.txt");
+    pos_t initial_pos = load_maze("../data/maze.txt");
+
 
     printf("Iniciando a navegação pelo labirinto...\n");
 
@@ -137,7 +145,7 @@ int main(int argc, char* argv[]) {
     bool exit_found = walk(initial_pos);
 
     // Esperar que a thread de impressão termine antes de encerrar o programa
-    printer.join();
+    //printer.join();
 
     // Tratar o retorno (imprimir mensagem)
     if (exit_found) {
