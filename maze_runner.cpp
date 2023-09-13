@@ -73,17 +73,7 @@ bool walk(pos_t pos) {
     maze[pos.i][pos.j] = '.';
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
-/*
-    mtx.lock(); // Bloquear o mutex antes de imprimir
-    system("clear"); // Limpar a tela (Windows: "cls")
-    for (int i = 0; i < num_rows; ++i) {
-        for (int j = 0; j < num_cols; ++j) {
-            printf("%c", maze[i][j]);
-        }
-        printf("\n");
-    }
-    mtx.unlock(); // Desbloquear o mutex após a impressão
-*/
+
     //std::vector<std::thread> threads; // Para armazenar threads adicionais
 
     if (pos.i > 0 && maze[pos.i - 1][pos.j] != '.' && maze[pos.i - 1][pos.j] != '#') {
@@ -114,15 +104,16 @@ bool walk(pos_t pos) {
 
         if(!valid_positions.empty()){
             pos_t new_position2 = valid_positions.top();
+            std::thread t(walk, pos_t{new_position2}); // Criar uma thread para explorar
+            t.detach(); // Desanexar a thread
             valid_positions.pop();
-            std::thread t2(walk, pos_t{new_position2}); // Criar uma thread para explorar
-            t2.detach(); // Desanexar a thread
 
             if(!valid_positions.empty()){
                 pos_t new_position3 = valid_positions.top();
+                std::thread t(walk, pos_t{new_position3}); // Criar uma thread para explorar
+                t.detach(); // Desanexar a thread    
                 valid_positions.pop();
-                std::thread t3(walk, pos_t{new_position3}); // Criar uma thread para explorar
-                t3.detach(); // Desanexar a thread    
+
             }       
         }
 
@@ -138,14 +129,14 @@ int main(int argc, char* argv[]) {
 
 
     printf("Iniciando a navegação pelo labirinto...\n");
-
+    bool exit_found;
     // Criar uma thread para imprimir o labirinto (joinable)
     std::thread printer(print_maze_thread);
 
-    bool exit_found = walk(initial_pos);
+    exit_found = walk(initial_pos);
 
     // Esperar que a thread de impressão termine antes de encerrar o programa
-    //printer.join();
+    printer.detach();
 
     // Tratar o retorno (imprimir mensagem)
     if (exit_found) {
